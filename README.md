@@ -4,6 +4,7 @@
 development and automated testing.
 
 PyPI package: `mock-myna` (import path remains `myna`).
+[PyPI](https://pypi.org/project/mock-myna/) | [GHCR](https://github.com/tijnschouten/myna/pkgs/container/myna)
 
 ## Run locally
 
@@ -319,7 +320,7 @@ In PyPI:
 - Add a trusted publisher with:
 - Owner: your GitHub org/user
 - Repository: your repo name
-- Workflow: `.github/workflows/ci-publish.yml`
+- Workflow: `.github/workflows/ci-release.yml`
 - Environment: `pypi`
 
 In GitHub:
@@ -336,9 +337,9 @@ git push origin v0.1.0
 
 This triggers GitHub Actions to run lint/tests and publish to PyPI on tag push.
 
-## Publish Docker image to Docker Hub
+## Publish container images
 
-Docker publishing is automated by [docker-publish.yml](/Users/tijnschouten/repos/personal/mynah/.github/workflows/docker-publish.yml).
+Container publishing is automated by [ci-release.yml](/Users/tijnschouten/repos/personal/mynah/.github/workflows/ci-release.yml).
 
 Modern default:
 - Publishes to GHCR (`ghcr.io/<owner>/myna`) using built-in `GITHUB_TOKEN` (no extra secret).
