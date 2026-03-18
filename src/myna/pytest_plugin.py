@@ -43,13 +43,16 @@ class MynaFixture:
         normalized_path = path if path.startswith("/") else f"/{path}"
         return f"{self.base_url}{normalized_path}"
 
-    def url_with_scenario(self, path: str, scenario: str | None = None) -> str:
+    def path_with_scenario(self, path: str, scenario: str | None = None) -> str:
         scenario_value = scenario if scenario is not None else self.default_scenario
-        target = self.url(path)
+        normalized_path = path if path.startswith("/") else f"/{path}"
         if not scenario_value:
-            return target
-        separator = "&" if "?" in target else "?"
-        return f"{target}{separator}scenario={quote(scenario_value)}"
+            return normalized_path
+        separator = "&" if "?" in normalized_path else "?"
+        return f"{normalized_path}{separator}scenario={quote(scenario_value)}"
+
+    def url_with_scenario(self, path: str, scenario: str | None = None) -> str:
+        return f"{self.base_url}{self.path_with_scenario(path, scenario)}"
 
     def headers(self, scenario: str | None = None) -> dict[str, str]:
         scenario_value = scenario if scenario is not None else self.default_scenario
@@ -139,3 +142,8 @@ def myna(myna_base_url: str, myna_scenario: str | None) -> MynaFixture:
     fixture = MynaFixture(base_url=myna_base_url, default_scenario=myna_scenario)
     fixture.clear_requests()
     return fixture
+
+
+@pytest.fixture
+def myna_url(myna: MynaFixture) -> str:
+    return myna.base_url

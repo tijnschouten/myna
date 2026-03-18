@@ -264,7 +264,7 @@ pytest_plugins = ["myna.pytest_plugin"]
 Or import fixtures directly in `conftest.py`:
 
 ```python
-from myna.pytest_plugin import myna, myna_base_url, myna_scenario
+from myna.pytest_plugin import myna, myna_base_url, myna_scenario, myna_url
 ```
 
 ```python
@@ -321,10 +321,22 @@ def test_retry_path_with_rate_limit(myna, monkeypatch):
     assert headers["X-Mock-Scenario"] == "error=rate_limit"
 ```
 
+If your app accepts a path field (not full URL), use `path_with_scenario`:
+
+```python
+api_endpoint = myna.path_with_scenario("/audio/transcriptions", "error=rate_limit")
+assert api_endpoint == "/audio/transcriptions?scenario=error%3Drate_limit"
+```
+
 Provided fixtures:
 - `myna_base_url`: starts one Myna server per test session and returns `/v1` base URL.
 - `myna_scenario`: optional indirect-param fixture for scenario strings.
-- `myna`: helper object with `base_url`, `headers(...)`, `url_with_scenario(...)`, `last_request`, `requests`, and `clear_requests()`.
+- `myna`: function-scoped helper that clears request history before each test and exposes `base_url`, `headers(...)`, `path_with_scenario(...)`, `url_with_scenario(...)`, `last_request`, `requests`, and `clear_requests()`.
+- `myna_url`: function-scoped alias for `myna.base_url` when you want a plain URL string and request capture in the same test.
+
+Fixture scope notes:
+- Use `myna` (or `myna_url`) when you need request inspection (`last_request`, `requests`).
+- Use `myna_base_url` for fastest session-scoped base URL setup when capture state is not needed.
 
 ## Changelog
 

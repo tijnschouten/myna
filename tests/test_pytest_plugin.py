@@ -11,6 +11,9 @@ def test_myna_fixture_helpers():
     fixture = MynaFixture(base_url="http://127.0.0.1:9999/v1", default_scenario="error=rate_limit")
     assert fixture.url("/chat/completions") == "http://127.0.0.1:9999/v1/chat/completions"
     assert fixture.headers() == {"X-Mock-Scenario": "error=rate_limit"}
+    assert fixture.path_with_scenario("/audio/transcriptions").endswith(
+        "scenario=error%3Drate_limit"
+    )
     assert fixture.url_with_scenario("/models").endswith("scenario=error%3Drate_limit")
     assert fixture.headers("delay=500,error=server") == {
         "X-Mock-Scenario": "delay=500,error=server"
@@ -42,3 +45,7 @@ def test_myna_capture_api(myna: MynaFixture):
 
     assert myna.clear_requests() == 1
     assert myna.last_request is None
+
+
+def test_myna_url_fixture(myna: MynaFixture, myna_url: str):
+    assert myna_url == myna.base_url

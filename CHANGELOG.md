@@ -9,6 +9,7 @@ All notable changes to this project are documented in this file.
   - `myna.last_request`
   - `myna.requests`
   - `myna.clear_requests()`
+  - `myna_url` fixture alias for function-scoped `myna.base_url`
 - Internal capture endpoints:
   - `GET /__myna/requests`
   - `GET /__myna/requests/last`
@@ -21,4 +22,5 @@ All notable changes to this project are documented in this file.
 
 ### Changed - 2026-03-18
 - Pytest `myna` fixture now clears captured request history at fixture start to keep tests isolated.
-
+- Added `path_with_scenario(...)` on `MynaFixture` for path-only clients that cannot pass headers.
+- Clarified fixture scope guidance in README (`myna`/`myna_url` vs `myna_base_url`).
