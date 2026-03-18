@@ -72,6 +72,7 @@ The `myna` fixture can now inspect what your app sent over HTTP:
 - `myna.last_request`: most recent captured request (or `None`)
 - `myna.requests`: all captured requests for the current test
 - `myna.clear_requests()`: clear capture history
+- `myna.next_response(...)`: seed a one-shot response for the next matching request
 
 Captured request fields include:
 
@@ -82,6 +83,24 @@ Captured request fields include:
 
 These are backed by internal Myna endpoints under `/__myna/requests` and are intended
 for test instrumentation. Calls to these internal endpoints are not added to the capture log.
+
+## One-shot seeded responses (pytest)
+
+For parser/error-path tests, seed the next response body without patching your HTTP client:
+
+```python
+def test_handles_empty_or_malformed_output(myna):
+    myna.next_response(
+        {"choices": [{"message": {"content": ""}}]},
+        path="/v1/chat/completions",
+    )
+
+    out = run_summary("input")
+    assert out == ""
+```
+
+`myna.next_response(...)` is one-shot: after one matching request, normal endpoint behavior resumes.
+Seeded responses match on method + path and are intended to complement scenarios.
 
 Example:
 
@@ -332,6 +351,7 @@ Provided fixtures:
 - `myna_base_url`: starts one Myna server per test session and returns `/v1` base URL.
 - `myna_scenario`: optional indirect-param fixture for scenario strings.
 - `myna`: function-scoped helper that clears request history before each test and exposes `base_url`, `headers(...)`, `path_with_scenario(...)`, `url_with_scenario(...)`, `last_request`, `requests`, and `clear_requests()`.
+- `myna`: function-scoped helper that clears request history before each test and exposes `base_url`, `headers(...)`, `path_with_scenario(...)`, `url_with_scenario(...)`, `last_request`, `requests`, `clear_requests()`, `next_response(...)`, and `clear_seeded_responses()`.
 - `myna_url`: function-scoped alias for `myna.base_url` when you want a plain URL string and request capture in the same test.
 
 Fixture scope notes:

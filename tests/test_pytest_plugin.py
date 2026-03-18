@@ -45,6 +45,7 @@ def test_myna_capture_api(myna: MynaFixture):
 
     assert myna.clear_requests() == 1
     assert myna.last_request is None
+    assert myna.clear_seeded_responses() == 0
 
 
 def test_myna_url_fixture(myna: MynaFixture, myna_url: str):

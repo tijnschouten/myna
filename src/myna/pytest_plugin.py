@@ -81,6 +81,33 @@ class MynaFixture:
         response.raise_for_status()
         return int(response.json().get("cleared", 0))
 
+    def next_response(
+        self,
+        body: object,
+        *,
+        path: str = "/v1/chat/completions",
+        method: str = "POST",
+        status_code: int = 200,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        response = httpx.post(
+            f"{self._root_url}/__myna/responses/next",
+            timeout=2,
+            json={
+                "path": path if path.startswith("/") else f"/{path}",
+                "method": method.upper(),
+                "status_code": status_code,
+                "headers": headers or {},
+                "json_body": body,
+            },
+        )
+        response.raise_for_status()
+
+    def clear_seeded_responses(self) -> int:
+        response = httpx.delete(f"{self._root_url}/__myna/responses", timeout=2)
+        response.raise_for_status()
+        return int(response.json().get("cleared", 0))
+
     @property
     def _root_url(self) -> str:
         return self.base_url.removesuffix("/v1")
@@ -140,6 +167,7 @@ def myna_scenario(request: pytest.FixtureRequest) -> str | None:
 @pytest.fixture
 def myna(myna_base_url: str, myna_scenario: str | None) -> MynaFixture:
     fixture = MynaFixture(base_url=myna_base_url, default_scenario=myna_scenario)
+    fixture.clear_seeded_responses()
     fixture.clear_requests()
     return fixture
 

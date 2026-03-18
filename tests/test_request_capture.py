@@ -42,6 +42,15 @@ def test_request_capture_multipart_payload(client):
 def test_capture_endpoints_are_not_captured(client):
     client.delete("/__myna/requests")
 
-    response = client.get("/__myna/requests")
-    assert response.status_code == 200
-    assert response.json()["requests"] == []
+    response_requests = client.get("/__myna/requests")
+    assert response_requests.status_code == 200
+
+    response_seed = client.post(
+        "/__myna/responses/next",
+        json={"path": "/v1/chat/completions", "json_body": {"choices": []}},
+    )
+    assert response_seed.status_code == 200
+
+    response_after = client.get("/__myna/requests")
+    assert response_after.status_code == 200
+    assert response_after.json()["requests"] == []
