@@ -80,6 +80,9 @@ Captured request fields include:
 - `form` and `files` for multipart/form-data and form-encoded payloads
 - `body_text`, `body_base64` for raw-body assertions
 
+These are backed by internal Myna endpoints under `/__myna/requests` and are intended
+for test instrumentation. Calls to these internal endpoints are not added to the capture log.
+
 Example:
 
 ```python
@@ -322,6 +325,10 @@ Provided fixtures:
 - `myna_base_url`: starts one Myna server per test session and returns `/v1` base URL.
 - `myna_scenario`: optional indirect-param fixture for scenario strings.
 - `myna`: helper object with `base_url`, `headers(...)`, `url_with_scenario(...)`, `last_request`, `requests`, and `clear_requests()`.
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for release notes and feature history.
 
 ## Tests
 
