@@ -92,7 +92,7 @@ For parser/error-path tests, seed the next response body without patching your H
 def test_handles_empty_or_malformed_output(myna):
     myna.next_response(
         {"choices": [{"message": {"content": ""}}]},
-        path="/v1/chat/completions",
+        path="/chat/completions",
     )
 
     out = run_summary("input")
@@ -101,6 +101,7 @@ def test_handles_empty_or_malformed_output(myna):
 
 `myna.next_response(...)` is one-shot: after one matching request, normal endpoint behavior resumes.
 Seeded responses match on method + path and are intended to complement scenarios.
+Like other `myna` fixture helpers, `path` is short-form (for example `"/chat/completions"`).
 
 Example:
 

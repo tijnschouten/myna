@@ -14,7 +14,7 @@ def test_next_response_overrides_once(myna: MynaFixture):
         "choices": [{"index": 0, "message": {"role": "assistant", "content": ""}}],
         "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
     }
-    myna.next_response(seeded_payload, path="/v1/chat/completions")
+    myna.next_response(seeded_payload, path="/chat/completions")
 
     first = httpx.post(
         myna.url("/chat/completions"),
@@ -43,3 +43,15 @@ def test_next_response_can_seed_malformed_shape(myna: MynaFixture):
     )
     assert response.status_code == 200
     assert response.json()["choices"][0]["message"]["content"] is None
+
+
+def test_next_response_accepts_full_path_for_compat(myna: MynaFixture):
+    myna.next_response({"compat": True}, path="/v1/chat/completions")
+
+    response = httpx.post(
+        myna.url("/chat/completions"),
+        json={"model": "mock-chat-v1", "messages": [{"role": "user", "content": "hello"}]},
+        timeout=2,
+    )
+    assert response.status_code == 200
+    assert response.json()["compat"] is True

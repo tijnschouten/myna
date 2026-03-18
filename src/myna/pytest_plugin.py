@@ -40,12 +40,11 @@ class MynaFixture:
     default_scenario: str | None = None
 
     def url(self, path: str) -> str:
-        normalized_path = path if path.startswith("/") else f"/{path}"
-        return f"{self.base_url}{normalized_path}"
+        return f"{self.base_url}{self._normalize_short_path(path)}"
 
     def path_with_scenario(self, path: str, scenario: str | None = None) -> str:
         scenario_value = scenario if scenario is not None else self.default_scenario
-        normalized_path = path if path.startswith("/") else f"/{path}"
+        normalized_path = self._normalize_short_path(path)
         if not scenario_value:
             return normalized_path
         separator = "&" if "?" in normalized_path else "?"
@@ -85,16 +84,17 @@ class MynaFixture:
         self,
         body: object,
         *,
-        path: str = "/v1/chat/completions",
+        path: str = "/chat/completions",
         method: str = "POST",
         status_code: int = 200,
         headers: dict[str, str] | None = None,
     ) -> None:
+        normalized_path = self._normalize_seed_path(path)
         response = httpx.post(
             f"{self._root_url}/__myna/responses/next",
             timeout=2,
             json={
-                "path": path if path.startswith("/") else f"/{path}",
+                "path": normalized_path,
                 "method": method.upper(),
                 "status_code": status_code,
                 "headers": headers or {},
@@ -111,6 +111,18 @@ class MynaFixture:
     @property
     def _root_url(self) -> str:
         return self.base_url.removesuffix("/v1")
+
+    @staticmethod
+    def _normalize_short_path(path: str) -> str:
+        return path if path.startswith("/") else f"/{path}"
+
+    def _normalize_seed_path(self, path: str) -> str:
+        normalized_path = self._normalize_short_path(path)
+        if normalized_path.startswith("/v1/"):
+            return normalized_path
+        if normalized_path == "/v1":
+            return normalized_path
+        return f"/v1{normalized_path}"
 
 
 @pytest.fixture(scope="session")

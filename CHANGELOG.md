@@ -30,4 +30,5 @@ All notable changes to this project are documented in this file.
 - Pytest `myna` fixture now clears captured request history at fixture start to keep tests isolated.
 - Pytest `myna` fixture now clears seeded responses at fixture start to keep tests isolated.
 - Added `path_with_scenario(...)` on `MynaFixture` for path-only clients that cannot pass headers.
+- `myna.next_response(path=...)` now follows short-path fixture conventions (for example `"/chat/completions"`); `/v1/...` remains accepted for compatibility.
 - Clarified fixture scope guidance in README (`myna`/`myna_url` vs `myna_base_url`).
