@@ -3,6 +3,8 @@
 `myna` is a local FastAPI server that mimics core OpenAI-compatible REST API endpoints for
 development and automated testing.
 
+PyPI package: `mock-myna` (import path remains `myna`).
+
 ## Run locally
 
 ```bash
@@ -312,7 +314,7 @@ git push -u origin main
 ### 2) Configure PyPI trusted publishing
 
 In PyPI:
-- Create project `myna` (or claim name if available).
+- Create project `mock-myna` (or claim name if available).
 - Go to project settings > Publishing.
 - Add a trusted publisher with:
 - Owner: your GitHub org/user

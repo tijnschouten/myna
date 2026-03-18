@@ -1,5 +1,5 @@
 [project]
-name = "myna"
+name = "mock-myna"
 version = "0.1.0"
 description = "Local mock OpenAI-compatible server for development and tests."
 readme = "README.md"
