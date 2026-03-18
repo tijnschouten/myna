@@ -8,6 +8,8 @@ from fastapi.testclient import TestClient
 from myna.config import get_settings
 from myna.main import create_app
 
+pytest_plugins = ["myna.pytest_plugin"]
+
 
 @pytest.fixture(autouse=True)
 def clear_settings_cache():

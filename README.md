@@ -65,6 +65,36 @@ console.log(resp.choices[0]?.message?.content);
 - `POST /v1/audio/transcriptions`
 - `POST /v1/audio/translations`
 
+## Request capture (pytest)
+
+The `myna` fixture can now inspect what your app sent over HTTP:
+
+- `myna.last_request`: most recent captured request (or `None`)
+- `myna.requests`: all captured requests for the current test
+- `myna.clear_requests()`: clear capture history
+
+Captured request fields include:
+
+- `method`, `path`, `query`, `headers`, `content_type`
+- `json` for JSON payloads
+- `form` and `files` for multipart/form-data and form-encoded payloads
+- `body_text`, `body_base64` for raw-body assertions
+
+Example:
+
+```python
+def test_run_transcription_sends_correct_fields(myna, monkeypatch):
+    monkeypatch.setenv("LLM_BASE_URL", myna.base_url)
+
+    run_transcription(TEST_AUDIO)
+
+    req = myna.last_request
+    assert req is not None
+    assert req.form["model"] == "whisper-mock"
+    assert req.form["language"] == "nl"
+    assert req.files["file"]["content_type"] == "audio/wav"
+```
+
 ## Scenario header
 
 Use `X-Mock-Scenario` (or `?scenario=`) to inject delays and failures.
@@ -291,7 +321,7 @@ def test_retry_path_with_rate_limit(myna, monkeypatch):
 Provided fixtures:
 - `myna_base_url`: starts one Myna server per test session and returns `/v1` base URL.
 - `myna_scenario`: optional indirect-param fixture for scenario strings.
-- `myna`: helper object with `base_url`, `headers(...)`, and `url_with_scenario(...)`.
+- `myna`: helper object with `base_url`, `headers(...)`, `url_with_scenario(...)`, `last_request`, `requests`, and `clear_requests()`.
 
 ## Tests
 
@@ -318,40 +348,3 @@ In PyPI:
 - Create project `mock-myna` (or claim name if available).
 - Go to project settings > Publishing.
 - Add a trusted publisher with:
-- Owner: your GitHub org/user
-- Repository: your repo name
-- Workflow: `.github/workflows/ci-release.yml`
-- Environment: `pypi`
-
-In GitHub:
-- Repo settings > Environments > create environment `pypi`.
-
-### 3) Release by pushing a version tag
-
-Version comes from `pyproject.toml` (`[project].version`).
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-This triggers GitHub Actions to run lint/tests and publish to PyPI on tag push.
-
-## Publish container images
-
-Container publishing is automated by [ci-release.yml](/Users/tijnschouten/repos/personal/mynah/.github/workflows/ci-release.yml).
-
-Modern default:
-- Publishes to GHCR (`ghcr.io/<owner>/myna`) using built-in `GITHUB_TOKEN` (no extra secret).
-
-Configure these GitHub repository secrets:
-- `DOCKERHUB_USERNAME`
-- `DOCKERHUB_TOKEN` (Docker Hub access token, not your password)
-
-Optional Docker Hub mirror target:
-- `tijnschouten/myna`
-
-Tag behavior:
-- Push to `main` -> updates `latest` and `main` tags
-- Push `v*` tag -> publishes matching version tag (for example `v0.1.0`)
-- GHCR always publishes; Docker Hub publishes only when both Docker secrets are set
