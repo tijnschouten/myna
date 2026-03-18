@@ -335,3 +335,18 @@ git push origin v0.1.0
 ```
 
 This triggers GitHub Actions to run lint/tests and publish to PyPI on tag push.
+
+## Publish Docker image to Docker Hub
+
+Docker publishing is automated by [docker-publish.yml](/Users/tijnschouten/repos/personal/mynah/.github/workflows/docker-publish.yml).
+
+Configure these GitHub repository secrets:
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN` (Docker Hub access token, not your password)
+
+Current image target:
+- `tijnschouten/myna`
+
+Tag behavior:
+- Push to `main` -> updates `latest` and `main`
+- Push `v*` tag -> publishes the matching version tag (for example `v0.1.0`)
