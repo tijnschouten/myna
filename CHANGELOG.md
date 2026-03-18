@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-03-18
+
 ### Added - 2026-03-18
 - Request capture support for pytest users:
   - `myna.last_request`
