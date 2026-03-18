@@ -13,6 +13,21 @@ import httpx
 import pytest
 
 
+@dataclass(slots=True)
+class CapturedRequest:
+    method: str
+    path: str
+    query: dict[str, str]
+    headers: dict[str, str]
+    content_type: str
+    body_text: str
+    body_base64: str
+    json: object | None
+    form: dict[str, object]
+    files: dict[str, object]
+
+
+
 def _free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -25,22 +40,89 @@ class MynaFixture:
     default_scenario: str | None = None
 
     def url(self, path: str) -> str:
-        normalized_path = path if path.startswith("/") else f"/{path}"
-        return f"{self.base_url}{normalized_path}"
+        return f"{self.base_url}{self._normalize_short_path(path)}"
+
+    def path_with_scenario(self, path: str, scenario: str | None = None) -> str:
+        scenario_value = scenario if scenario is not None else self.default_scenario
+        normalized_path = self._normalize_short_path(path)
+        if not scenario_value:
+            return normalized_path
+        separator = "&" if "?" in normalized_path else "?"
+        return f"{normalized_path}{separator}scenario={quote(scenario_value)}"
 
     def url_with_scenario(self, path: str, scenario: str | None = None) -> str:
-        scenario_value = scenario if scenario is not None else self.default_scenario
-        target = self.url(path)
-        if not scenario_value:
-            return target
-        separator = "&" if "?" in target else "?"
-        return f"{target}{separator}scenario={quote(scenario_value)}"
+        return f"{self.base_url}{self.path_with_scenario(path, scenario)}"
 
     def headers(self, scenario: str | None = None) -> dict[str, str]:
         scenario_value = scenario if scenario is not None else self.default_scenario
         if not scenario_value:
             return {}
         return {"X-Mock-Scenario": scenario_value}
+
+    @property
+    def requests(self) -> list[CapturedRequest]:
+        response = httpx.get(f"{self._root_url}/__myna/requests", timeout=2)
+        response.raise_for_status()
+        records = response.json().get("requests", [])
+        return [CapturedRequest(**record) for record in records]
+
+    @property
+    def last_request(self) -> CapturedRequest | None:
+        response = httpx.get(f"{self._root_url}/__myna/requests/last", timeout=2)
+        response.raise_for_status()
+        payload = response.json().get("request")
+        if payload is None:
+            return None
+        return CapturedRequest(**payload)
+
+    def clear_requests(self) -> int:
+        response = httpx.delete(f"{self._root_url}/__myna/requests", timeout=2)
+        response.raise_for_status()
+        return int(response.json().get("cleared", 0))
+
+    def next_response(
+        self,
+        body: object,
+        *,
+        path: str = "/chat/completions",
+        method: str = "POST",
+        status_code: int = 200,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        normalized_path = self._normalize_seed_path(path)
+        response = httpx.post(
+            f"{self._root_url}/__myna/responses/next",
+            timeout=2,
+            json={
+                "path": normalized_path,
+                "method": method.upper(),
+                "status_code": status_code,
+                "headers": headers or {},
+                "json_body": body,
+            },
+        )
+        response.raise_for_status()
+
+    def clear_seeded_responses(self) -> int:
+        response = httpx.delete(f"{self._root_url}/__myna/responses", timeout=2)
+        response.raise_for_status()
+        return int(response.json().get("cleared", 0))
+
+    @property
+    def _root_url(self) -> str:
+        return self.base_url.removesuffix("/v1")
+
+    @staticmethod
+    def _normalize_short_path(path: str) -> str:
+        return path if path.startswith("/") else f"/{path}"
+
+    def _normalize_seed_path(self, path: str) -> str:
+        normalized_path = self._normalize_short_path(path)
+        if normalized_path.startswith("/v1/"):
+            return normalized_path
+        if normalized_path == "/v1":
+            return normalized_path
+        return f"/v1{normalized_path}"
 
 
 @pytest.fixture(scope="session")
@@ -96,4 +178,12 @@ def myna_scenario(request: pytest.FixtureRequest) -> str | None:
 
 @pytest.fixture
 def myna(myna_base_url: str, myna_scenario: str | None) -> MynaFixture:
-    return MynaFixture(base_url=myna_base_url, default_scenario=myna_scenario)
+    fixture = MynaFixture(base_url=myna_base_url, default_scenario=myna_scenario)
+    fixture.clear_seeded_responses()
+    fixture.clear_requests()
+    return fixture
+
+
+@pytest.fixture
+def myna_url(myna: MynaFixture) -> str:
+    return myna.base_url

@@ -7,12 +7,17 @@ from fastapi.testclient import TestClient
 
 from myna.config import get_settings
 from myna.main import create_app
+from myna.response_seeding import seeded_response_queue
+
+pytest_plugins = ["myna.pytest_plugin"]
 
 
 @pytest.fixture(autouse=True)
 def clear_settings_cache():
     get_settings.cache_clear()
+    seeded_response_queue.clear()
     yield
+    seeded_response_queue.clear()
     get_settings.cache_clear()
 
 
