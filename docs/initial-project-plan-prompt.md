@@ -1,3 +1,9 @@
+# Initial Project Plan Prompt
+
+This document is the original project brief/prompt used to shape the first version of
+Myna. It is kept for historical context and design intent, not as normative product
+documentation.
+
 # Myna — Technische Omschrijving
 
 **Project:** `myna`  
