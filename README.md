@@ -17,6 +17,18 @@ Import path: `myna`
 - A pytest plugin that starts the server and captures outgoing requests
 - One-shot seeded responses for parser and failure-path tests
 
+## Structured JSON mode
+
+For chat completions with `response_format.type` set to `json_object` or `json_schema`, Myna inspects the provided JSON Schema and generates stable mock values by schema shape.
+
+- `string` fields default to `"lorem ipsum"`
+- String `format` values are recognized for `date`, `date-time`, `email`, `uri`/`url`, and `uuid`
+- `integer`, `number`, and `boolean` fields return typed values
+- `array` fields are populated from their `items` schema
+- `object` fields are populated from `properties`
+- Dict-like schemas using `additionalProperties` generate a small mock map with generated values
+- `anyOf` and `oneOf` prefer non-`null` variants when both typed and nullable branches are present
+
 ## Supported endpoints
 
 - `GET /v1/models`

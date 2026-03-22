@@ -177,16 +177,16 @@ def _generate_from_schema(schema: Mapping[str, Any], depth: int) -> Any:
         for key in ("anyOf", "oneOf", "allOf"):
             variants = schema.get(key)
             if isinstance(variants, list) and variants:
-                first = variants[0]
-                if isinstance(first, Mapping):
-                    return _generate_from_schema(first, depth + 1)
+                selected = _select_schema_variant(variants)
+                if selected is not None:
+                    return _generate_from_schema(selected, depth + 1)
 
         properties = schema.get("properties")
         if isinstance(properties, Mapping):
             schema_type = "object"
 
     if schema_type == "string":
-        return "lorem ipsum"
+        return _generate_string_value(schema)
     if schema_type == "integer":
         return 42
     if schema_type == "number":
@@ -204,6 +204,12 @@ def _generate_from_schema(schema: Mapping[str, Any], depth: int) -> Any:
     if schema_type == "object":
         properties = schema.get("properties")
         if not isinstance(properties, Mapping):
+            additional_properties = schema.get("additionalProperties")
+            if isinstance(additional_properties, Mapping):
+                return {
+                    "mock_key_1": _generate_from_schema(additional_properties, depth + 1),
+                    "mock_key_2": _generate_from_schema(additional_properties, depth + 1),
+                }
             return {"key": "lorem ipsum"}
         result: dict[str, Any] = {}
         for key, property_schema in properties.items():
@@ -218,9 +224,37 @@ def _generate_from_schema(schema: Mapping[str, Any], depth: int) -> Any:
 
 def _normalize_schema_type(schema_type: Any) -> str | None:
     if isinstance(schema_type, str):
-        return schema_type
+        return None if schema_type == "null" else schema_type
     if isinstance(schema_type, list):
         for entry in schema_type:
             if isinstance(entry, str) and entry != "null":
                 return entry
     return None
+
+
+def _select_schema_variant(variants: list[Any]) -> Mapping[str, Any] | None:
+    for variant in variants:
+        if not isinstance(variant, Mapping):
+            continue
+        if _normalize_schema_type(variant.get("type")) is not None:
+            return variant
+
+    for variant in variants:
+        if isinstance(variant, Mapping):
+            return variant
+    return None
+
+
+def _generate_string_value(schema: Mapping[str, Any]) -> str:
+    schema_format = schema.get("format")
+    if schema_format == "date":
+        return "2026-01-01"
+    if schema_format == "date-time":
+        return "2026-01-01T00:00:00"
+    if schema_format == "email":
+        return "mock@example.com"
+    if schema_format in {"uri", "url"}:
+        return "https://example.com"
+    if schema_format == "uuid":
+        return "00000000-0000-0000-0000-000000000000"
+    return "lorem ipsum"

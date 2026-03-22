@@ -69,16 +69,24 @@ curl http://localhost:8000/v1/chat/completions \
 
 ## 4. JSON Mode
 
-Wanneer de request `response_format: { type: "json_object" }` bevat, inspecteert de mock het gevraagde schema (indien meegestuurd als system prompt of tool-definitie) en genereert een syntactisch kloppend JSON-object met dummy-waarden per type:
+Wanneer de request `response_format: { type: "json_object" }` of `response_format: { type: "json_schema" }` bevat, inspecteert de mock het gevraagde schema (indien meegestuurd als response format of tool-definitie) en genereert een syntactisch kloppend JSON-object met dummy-waarden per type:
 
-| JSON Schema type | Dummy waarde |
+| JSON Schema vorm | Dummy waarde |
 |---|---|
 | `string` | `"lorem ipsum"` |
+| `string` + `format: date` | `"2026-01-01"` |
+| `string` + `format: date-time` | `"2026-01-01T00:00:00"` |
+| `string` + `format: email` | `"mock@example.com"` |
+| `string` + `format: uri` / `url` | `"https://example.com"` |
+| `string` + `format: uuid` | `"00000000-0000-0000-0000-000000000000"` |
 | `integer` | `42` |
 | `number` | `3.14` |
 | `boolean` | `true` |
-| `array` | `["item_1", "item_2"]` |
-| `object` | Recursief gevuld op basis van `properties` |
+| `array` | Twee items op basis van `items` |
+| `object` + `properties` | Recursief gevuld op basis van `properties` |
+| `object` + `additionalProperties` | Kleine map, bijvoorbeeld `{"mock_key_1": <waarde>, "mock_key_2": <waarde>}` |
+
+Bij `anyOf` en `oneOf` kiest de generator bij voorkeur een niet-`null` variant, zodat optionele Pydantic-velden niet onnodig `null` teruggeven.
 
 Bij scenario `json_invalid` wordt expres malformed JSON teruggegeven (ontbrekende sluithaak e.d.).
 

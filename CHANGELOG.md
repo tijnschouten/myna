@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-03-22
+
+### Changed - 2026-03-22
+- Structured JSON mock generation now respects common string `format` values used by Pydantic-generated schemas:
+  - `date`
+  - `date-time`
+  - `email`
+  - `uri` / `url`
+  - `uuid`
+- Structured JSON mock generation for `anyOf` / `oneOf` now prefers non-`null` variants instead of defaulting to nullable branches.
+- Structured JSON object generation now supports dict-like schemas via `additionalProperties`, producing a small mock map with generated values from the nested schema.
+
 ## [0.2.0] - 2026-03-18
 
 ### Added - 2026-03-18

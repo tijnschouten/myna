@@ -72,6 +72,109 @@ def test_json_mode_uses_response_json_schema(client):
     assert body["count"] == 42
 
 
+def test_json_mode_respects_string_formats(client):
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "gpt-4o",
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "formatted_strings",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "birth_date": {"type": "string", "format": "date"},
+                            "created_at": {"type": "string", "format": "date-time"},
+                            "email": {"type": "string", "format": "email"},
+                            "homepage": {"type": "string", "format": "uri"},
+                            "avatar": {"type": "string", "format": "url"},
+                            "id": {"type": "string", "format": "uuid"},
+                        },
+                    },
+                },
+            },
+            "messages": [{"role": "user", "content": "Return structured json"}],
+        },
+    )
+
+    assert response.status_code == 200
+    content = response.json()["choices"][0]["message"]["content"]
+    body = json.loads(content)
+    assert body == {
+        "birth_date": "2026-01-01",
+        "created_at": "2026-01-01T00:00:00",
+        "email": "mock@example.com",
+        "homepage": "https://example.com",
+        "avatar": "https://example.com",
+        "id": "00000000-0000-0000-0000-000000000000",
+    }
+
+
+@pytest.mark.parametrize("key", ["anyOf", "oneOf"])
+def test_json_mode_prefers_non_null_variant(client, key):
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "gpt-4o",
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "nullable_field",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "value": {
+                                key: [
+                                    {"type": "null"},
+                                    {"type": "integer"},
+                                ]
+                            }
+                        },
+                    },
+                },
+            },
+            "messages": [{"role": "user", "content": "Return structured json"}],
+        },
+    )
+
+    assert response.status_code == 200
+    content = response.json()["choices"][0]["message"]["content"]
+    body = json.loads(content)
+    assert body["value"] == 42
+
+
+def test_json_mode_generates_additional_properties_values(client):
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "gpt-4o",
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "dict_of_arrays",
+                    "schema": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {"type": "integer"},
+                        },
+                    },
+                },
+            },
+            "messages": [{"role": "user", "content": "Return structured json"}],
+        },
+    )
+
+    assert response.status_code == 200
+    content = response.json()["choices"][0]["message"]["content"]
+    body = json.loads(content)
+    assert body == {
+        "mock_key_1": [42, 42],
+        "mock_key_2": [42, 42],
+    }
+
+
 def test_json_mode_without_schema_returns_default_object(client):
     response = client.post(
         "/v1/chat/completions",
